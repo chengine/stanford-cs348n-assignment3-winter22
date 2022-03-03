@@ -59,10 +59,10 @@ with torch.no_grad():
 
         # STUDENT CODE START
         # get a Gaussian noise
-
+        z = torch.normal(0., 1., size=(1,256)).to(device)
         # infer through the model to get the generated hierarchy
         # set maximal tree depth to conf.max_tree_depth
-
+        obj = decoder.decode_structure(z, conf.max_tree_depth)
         # STUDENT CODE END
                 
         # output the hierarchy

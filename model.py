@@ -65,12 +65,16 @@ class SymmetricChildEncoder(nn.Module):
 
         # STUDENT CODE START
         # use the mlp1 linear layer to extract per-child features
+        feat = torch.relu(self.mlp1(child_feats.view(batch_size*max_childs, feat_size))).view(batch_size, max_childs, -1)
 
         # zero non-existent children
+        x = feat.view(batch_size*max_childs, -1)*child_exists
 
         # perform max-pooling over children nodes
+        x = torch.max(x.view(batch_size,max_childs, -1), dim=1)[0]
 
         # use the mlp2 linear layer to summarize a parent node feature
+        parent_feat = torch.relu(self.mlp2(x.view(batch_size, -1)))
 
         # STUDENT CODE END
 
@@ -189,13 +193,15 @@ class ConcatChildDecoder(nn.Module):
         
         # STUDENT CODE START
         # use the mlp_parent linear layer to get the children node features
+        par_feats = torch.relu(self.mlp_parent(parent_feature))
+        child_feats = par_feats.view(batch_size, self.max_child_num, self.hidden_size)
 
         # use the mlp_exists linear layer to predict children node existence (output logits, i.e. no sigmoid)
-        
+        child_exists_logits = self.mlp_exists(child_feats.view(batch_size*self.max_child_num, -1)).view(batch_size, self.max_child_num, -1)
         # use the mlp_sem linear layer to predict children node semantics (output logits, i.e. no sigmoid)
-
+        child_sem_logits = self.mlp_sem(child_feats.view(batch_size*self.max_child_num, -1)).view(batch_size, self.max_child_num, -1)
         # use the mlp_child linear layer to further evolve the children node features
-        
+        child_feats = torch.relu(self.mlp_child(child_feats.view(batch_size*self.max_child_num, -1))).view(batch_size, self.max_child_num, -1)
         # STUDENT CODE END
 
         return child_feats, child_sem_logits, child_exists_logits
@@ -330,7 +336,11 @@ class RecursiveDecoder(nn.Module):
                 # use the self.boxLossEstimator to estimate distances between the GT and PRED boxes
                 #   -  the input sizes to the function is B x 10, B x 10
                 #   - the output size is B
-
+                child_pred_boxes_repeat = child_pred_boxes[None,...].repeat(num_gt, 1, 1)
+                child_gt_boxes_repeat = child_gt_boxes[:, None,...].repeat(1, num_child_parts, 1)
+                dist_mat = self.boxLossEstimator(child_pred_boxes_repeat.view(num_gt*num_child_parts, -1), child_gt_boxes_repeat.view(num_gt*num_child_parts, -1))
+                dist_mat = dist_mat.reshape(num_gt, num_child_parts)
+                #dist_mat = torch.transpose(dist_mat.view(num_child_parts, num_gt), 0, 1)
                 # STUDENT CODE END
 
                 # returned matched_gt_idx contains a list of row indices (the GT box IDs) that are matched

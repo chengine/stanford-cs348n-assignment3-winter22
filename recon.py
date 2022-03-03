@@ -75,10 +75,10 @@ with torch.no_grad():
 
         # STUDENT CODE START
         # feed through the encoder to get a code z
-
+        z = encoder.encode_structure(obj)
         # infer through the decoder to get the reconstructed output
         # set maximal tree depth to conf.max_tree_depth
-
+        obj_pred = decoder.decode_structure(z, conf.max_tree_depth)
         # STUDENT CODE END
                 
         # output the hierarchy

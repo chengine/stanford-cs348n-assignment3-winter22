@@ -109,8 +109,9 @@ class Tree(object):
             # to get the string printouts for the child-level nodes (one row per child node)
             # please print with one more indent at the front of each child node
             # the pid arguments are 0, 1, 2, ... for all the children nodes of the same parent
-
-
+            if self.is_leaf is False:
+                for i, child in enumerate(self.children):
+                    out_str = out_str + child._to_str(level+1, i)
             # STUDENT CODE END
 
             return out_str
@@ -128,7 +129,27 @@ class Tree(object):
             part_sems = []
 
             # STUDENT CODE START
-           
+            def DFS(node, part_boxes, part_ids, part_sems, leafs_only):
+                # Add current node info if leafs_only is false
+                if leafs_only is False:
+                    # Just add all information regardless if this is or is not leaf
+                    part_boxes.append(node.box)
+                    part_ids.append(node.part_id)
+                    part_sems.append(node.full_label)
+                elif leafs_only is True and node.is_leaf is True:
+                    # Means this node is a leaf node
+                    part_boxes.append(node.box)
+                    part_ids.append(node.part_id)
+                    part_sems.append(node.full_label)
+                elif leafs_only is True and node.is_leaf is False:
+                    # Look further down the tree for information
+                    for child in node.children:
+                        part_boxes, part_ids, part_sems = DFS(child, part_boxes, part_ids, part_sems, leafs_only)
+
+                return part_boxes, part_ids, part_sems
+
+            part_boxes, part_ids, part_sems = DFS(self, part_boxes, part_ids, part_sems, leafs_only)
+
             # STUDENT CODE END
 
             return part_boxes, part_ids, part_sems

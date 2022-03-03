@@ -76,22 +76,27 @@ with torch.no_grad():
 
     # STUDENT CODE START
     # feed through the encoder to get two codes z1 and z2
+    z1 = encoder.encode_structure(obj1)
+    z2 = encoder.encode_structure(obj2)
 
     # create a forloop looping 0, 1, 2, ..., num_interp - 1, num_interp
     # interpolate the feature so that the first feature is exactly z1 and the last is exactly z2
-    for :
-
+    diff = (z2 - z1) / num_interp
+    for i in range(num_interp + 1):
+        z = z1 + diff*i
         # infer through the decoder to get the interpolate output
         # set maximal tree depth to conf.max_tree_depth
-        
+        obj = decoder.decode_structure(z, conf.max_tree_depth)
+
         # add to the list obj_outs
+        obj_outs.append(obj)
 
     # STUDENT CODE END
 
     obj_names = []
     for i in range(num_interp+1):
         obj_names.append('interp-%d'%i)
-
+        obj_out = obj_outs[i]
         # output the hierarchy
         with open(os.path.join(out_dir, 'step-%d.txt'%i), 'w') as fout:
             fout.write(str(obj_out)+'\n\n')
